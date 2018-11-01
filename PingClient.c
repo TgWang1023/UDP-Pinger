@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
         exit(1);
     }
     printf("\n");
-    
+
     sock = socket(AF_INET, SOCK_DGRAM, 0);
     if (sock < 0) error("socket");
     struct timeval timeout = {1, 0};
@@ -44,6 +44,8 @@ int main(int argc, char *argv[])
     length=sizeof(struct sockaddr_in);
 
     for(int i = 0; i < 10; i++) {
+        char pingString[256];
+        char timeString[256];
         char buffer[256];
 
         time_t rawtime;
@@ -51,8 +53,11 @@ int main(int argc, char *argv[])
         time(&rawtime);
         timeinfo = localtime(&rawtime);
 
-        sprintf(buffer, "PING %d ", i);
-        strcat(buffer, asctime(timeinfo));
+        sprintf(pingString, "PING %d ", i);
+        strftime(timeString, sizeof(timeString), "%H:%M:%S", timeinfo);
+        strcpy(buffer, pingString);
+        strcat(buffer, timeString);
+        strcat(buffer, "\n");
 
         n = sendto(sock, buffer, strlen(buffer), 0, (const struct sockaddr *)&server, length);
         if (n < 0) error("sendto");
@@ -69,7 +74,7 @@ int main(int argc, char *argv[])
     }
     printf("--- ping statistics ---\n");
     printf("X packets transmitted, Y packets received, Z%% packet loss\n");
-    printf("round-trip min/avg/max = MIN/AVG/MAX ms\n");
+    printf("round-trip min/avg/max = MIN/AVG/MAX ms\n\n");
 
     close(sock);
     return 0;
