@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
     printf("10 packets transmitted, %i packets received, %.*f%% packet loss\n", received, 0, percent);
     if(time_recorded == 1) {
         double avg = total / received;
-        printf("round-trip min/avg/max = %.*f/%.*f/%.*f ms\n", 3, min, 3, max, 3, avg);
+        printf("round-trip min/avg/max = %.*f/%.*f/%.*f ms\n", 3, min, 3, avg, 3, max);
     }
     printf("\n");
 
