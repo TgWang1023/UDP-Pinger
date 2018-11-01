@@ -1,10 +1,10 @@
 CC = gcc
 ARGS = -Wall
 
-all: client
+all: PingClient
 
-client: PingClient.c
-	$(CC) $(ARGS) -o client PingClient.c
+PingClient: PingClient.c
+	$(CC) $(ARGS) -o PingClient PingClient.c
 
 clean:
-	rm -f *.o client *~
+	rm -f *.o PingClient *~
