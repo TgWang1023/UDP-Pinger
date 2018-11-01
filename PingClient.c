@@ -16,17 +16,24 @@
 void error(const char *);
 int main(int argc, char *argv[])
 {
-   int sock, n;
-   unsigned int length;
-   struct sockaddr_in server, from;
-   struct hostent *hp;
+    int sock, n;
+    unsigned int length;
+    struct sockaddr_in server, from;
+    struct hostent *hp;
    
     if (argc != 3) { 
         printf("Usage: ./PingClient host port\n");
         exit(1);
     }
-    sock= socket(AF_INET, SOCK_DGRAM, 0);
+    printf("\n");
+    
+    sock = socket(AF_INET, SOCK_DGRAM, 0);
     if (sock < 0) error("socket");
+    struct timeval timeout = {1, 0};
+    if (setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(struct timeval)) == -1) {
+        error("setsockopt");
+        exit(1);
+    }
 
     server.sin_family = AF_INET;
     hp = gethostbyname(argv[1]);
@@ -50,7 +57,11 @@ int main(int argc, char *argv[])
         n = sendto(sock, buffer, strlen(buffer), 0, (const struct sockaddr *)&server, length);
         if (n < 0) error("sendto");
         n = recvfrom(sock, buffer, 256, 0, (struct sockaddr *)&from, &length);
-        if (n < 0) error("recvfrom");
+        if (n < 0) {
+            printf("Request timeout.\n"); 
+            continue;
+        }
+        sleep(1);
 
         printf("Ping Received From %s: ", argv[1]);
         printf(buffer, "%s");
