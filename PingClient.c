@@ -43,6 +43,7 @@ int main(int argc, char *argv[])
     server.sin_port = htons(atoi(argv[2]));
     length=sizeof(struct sockaddr_in);
 
+    int loss_count = 0;
     for(int i = 0; i < 10; i++) {
         char pingString[256];
         char timeString[256];
@@ -52,6 +53,12 @@ int main(int argc, char *argv[])
         struct tm * timeinfo;
         time(&rawtime);
         timeinfo = localtime(&rawtime);
+        struct timespec start, stop;
+        double accum;
+        if(clock_gettime(CLOCK_REALTIME, &start) == -1) {
+            perror("clock gettime");
+            exit(EXIT_FAILURE);
+        }
 
         sprintf(pingString, "PING %d ", i);
         strftime(timeString, sizeof(timeString), "%H:%M:%S", timeinfo);
@@ -63,13 +70,20 @@ int main(int argc, char *argv[])
         if (n < 0) error("sendto");
         n = recvfrom(sock, buffer, 256, 0, (struct sockaddr *)&from, &length);
         if (n < 0) {
+            loss_count++;
             printf("Request timeout.\n"); 
             continue;
         }
+        if(clock_gettime(CLOCK_REALTIME, &stop) == -1) {
+            perror("clock gettime");
+            exit(EXIT_FAILURE);
+        } 
+        accum = ( stop.tv_sec - start.tv_sec ) * 1000.00 + ( stop.tv_nsec - start.tv_nsec ) / 1000000.00;
         sleep(1);
 
         printf("Ping Received From %s: ", argv[1]);
-        printf(buffer, "%s");
+        printf("seq#=%i ", i);
+        printf("time=%.*f ms\n", 3, accum);
         bzero(buffer, 256);
     }
     printf("--- ping statistics ---\n");
