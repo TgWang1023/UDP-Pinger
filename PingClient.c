@@ -44,6 +44,10 @@ int main(int argc, char *argv[])
     length=sizeof(struct sockaddr_in);
 
     int loss_count = 0;
+    int time_recorded = 0;
+    double min = 0.0;
+    double max = 0.0;
+    double total = 0.0;
     for(int i = 0; i < 10; i++) {
         char pingString[256];
         char timeString[256];
@@ -79,6 +83,14 @@ int main(int argc, char *argv[])
             exit(EXIT_FAILURE);
         } 
         accum = ( stop.tv_sec - start.tv_sec ) * 1000.00 + ( stop.tv_nsec - start.tv_nsec ) / 1000000.00;
+        if(time_recorded == 0) {
+            max = accum;
+            min = accum;
+        }
+        time_recorded = 1;
+        if(accum > max) max = accum;
+        if(accum < min) min = accum;
+        total += accum;
         sleep(1);
 
         printf("Ping Received From %s: ", argv[1]);
@@ -86,9 +98,16 @@ int main(int argc, char *argv[])
         printf("time=%.*f ms\n", 3, accum);
         bzero(buffer, 256);
     }
+
+    int received = 10 - loss_count;
+    double percent = (loss_count / 10.0) * 100.0;
     printf("--- ping statistics ---\n");
-    printf("X packets transmitted, Y packets received, Z%% packet loss\n");
-    printf("round-trip min/avg/max = MIN/AVG/MAX ms\n\n");
+    printf("10 packets transmitted, %i packets received, %.*f%% packet loss\n", received, 0, percent);
+    if(time_recorded == 1) {
+        double avg = total / received;
+        printf("round-trip min/avg/max = %.*f/%.*f/%.*f ms\n", 3, min, 3, max, 3, avg);
+    }
+    printf("\n");
 
     close(sock);
     return 0;
